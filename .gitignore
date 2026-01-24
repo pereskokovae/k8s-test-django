@@ -2,3 +2,21 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.venv/
+venv/
+
+# Secrets / env
+.env
+*.env
+secret*.yml
+secret*.yaml
+*secrets*.yml
+*secrets*.yaml
+
+# K8s local stuff (optional)
+*.local.yaml
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
