@@ -99,3 +99,30 @@ stringData:
 ```sh
 kubectl apply -f k8s/secret.yaml
 ```
+
+### Ingress (доступ к сайту по домену)
+
+Ingress нужен, чтобы открывать сайт по доменному имени и стандартному порту 80, без ip в адресе.  
+В этом проекте используется Ingress NGINX в Minikube.
+
+1) Включите Ingress в Minikube
+```bash
+minikube addons enable ingress
+```
+2) Примените манифест Ingress
+```bash
+kubectl apply -f k8s/django-ingress.yaml
+```
+4) Пропишите домен в /etc/hosts/
+Ingress будет доступен по домену star-burger.test
+
+1. Узнать IP Minikube:
+```bash
+minikube ip
+```
+3. Откройте /etc/hosts/ и пропишите строку:
+```
+<MINIKUBE_IP> star-burger.test
+```
+
+После этого сайт должен открываться [http://star-burger.test](http://star-burger.test)
