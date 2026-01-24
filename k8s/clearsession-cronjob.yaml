@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: django-clearsessions
+spec:
+  schedule: "0 0 1 * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: clearsessions
+              image: docker.io/e4katerina123/django_app:latest
+              workingDir: /webapp/src
+              command: ["python", "manage.py", "clearsessions"]
+              envFrom:
+                - secretRef:
+                    name: secrets
+              env:
+                - name: DEBUG
+                  value: "False"
