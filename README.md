@@ -77,7 +77,7 @@ $ docker compose build web
 `DATABASE_URL` -- адрес для подключения к базе данных PostgreSQL. Другие СУБД сайт не поддерживает. [Формат записи](https://github.com/jacobian/dj-database-url#url-schema).
 
 
-## Kubernetes: Django Deployment и Secret
+## Kubernetes Secret
 
 ### 1) Как создать secret.yaml 
 Проект ожидает чувствительные настройки (например `DATABASE_URL`, `SECRET_KEY`) через Kubernetes Secret.
@@ -126,3 +126,24 @@ minikube ip
 ```
 
 После этого сайт должен открываться [http://star-burger.test](http://star-burger.test)
+
+### Очистка устаревших сессий (clearsessions)
+Это нужно, чтобы база не разрасталась из-за старых сессий и сайт работал стабильнее.
+#### Запуск раз в месяц (CronJob)
+1. Примените манифест:
+```sh
+kubectl apply -f k8s/clearsession-cronjob.yaml
+```
+2. Проверить, что создано:
+```sh
+kubectl get cronjob
+```
+#### Запустить прямо сейчас (вручную из CronJob)
+1. Пропишите команду:
+```sh
+kubectl create job --from=cronjob/django-clearsessions django-clearsessions-once
+```
+2. Проверить, что создано:
+```sh
+kubectl get jobs
+```
