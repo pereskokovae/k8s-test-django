@@ -76,6 +76,28 @@ $ docker compose build web
 
 `DATABASE_URL` -- адрес для подключения к базе данных PostgreSQL. Другие СУБД сайт не поддерживает. [Формат записи](https://github.com/jacobian/dj-database-url#url-schema).
 
+## Развертование в minikube
+1. Запуск кластера
+```sh
+minikube start
+kubectl config use-context minikube
+```
+2. Примените секрет (о нем читайте ниже в разделе `Kubernetes Secret`)
+
+3. PostgreSQL внутри кластера
+Установите PostgreSQL через Helm и задайте свои значения (логин/пароль/имя БД).
+```sh
+kubectl apply -f k8s/secret.yaml
+```
+После установки обновите секрет приложения с DATABASE_URL и перезапустите Django:
+```sh
+kubectl rollout restart deployment/django-deployment
+```
+5. Миграции
+```sh
+kubectl exec -it deploy/django-deployment -- python manage.py migrate --noinput
+kubectl exec -it deploy/django-deployment -- python manage.py createsuperuser
+```
 
 ## Kubernetes Secret
 
