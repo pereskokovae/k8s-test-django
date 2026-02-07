@@ -80,6 +80,15 @@ Inside the Pod, connect to PostreSQL
 psql "host=your_host port=your_port user=your_username dbname=your_db_name sslmode=require sslrootcert=/certs/root.crt" #replace with your actual data
 ```
 
+### 5. Docker Image Build and Publish
+Build the image (tagged with the current git commit SHA)
+```bash
+cd <project-root>
+git rev-parse --short HEAD
+docker login
+docker build -t <your-dockerhub-username>/<repo>:<git-sha> ./backend_main_django
+docker push <your-dockerhub-username>/<repo>:<git-sha>
+```
 ---
 
 
