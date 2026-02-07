@@ -1,172 +1,111 @@
 # Django Site
+A Dockerized Django website for experimenting with Kubernetes.
 
-Докеризированный сайт на Django для экспериментов с Kubernetes.
+Inside the container, the Django application is run using `Nginx Unit` (not to be confused with Nginx).
+The Nginx Unit server performs two roles at once
+1. as a `web server`, it serves static and media files.
+2. as an `application server`, it runs Python and Django.
+In this setup, Nginx Unit replaces the traditional combination of Nginx + gunicorn.
+You can read more about Nginx Unit in the [official documentation](https://unit.nginx.org/).
 
-Внутри контейнера Django приложение запускается с помощью Nginx Unit, не путать с Nginx. Сервер Nginx Unit выполняет сразу две функции: как веб-сервер он раздаёт файлы статики и медиа, а в роли сервера-приложений он запускает Python и Django. Таким образом Nginx Unit заменяет собой связку из двух сервисов Nginx и Gunicorn/uWSGI. [Подробнее про Nginx Unit](https://unit.nginx.org/).
+## Preparing the environment for local development
 
-## Как подготовить окружение к локальной разработке
-
-Код в репозитории полностью докеризирован, поэтому для запуска приложения вам понадобится Docker. Инструкции по его установке ищите на официальных сайтах:
-
+The code in this repository is fully Dockerized, so you need `Docker` to run the application. Installation instructions can be found on the official website:
 - [Get Started with Docker](https://www.docker.com/get-started/)
 
-Вместе со свежей версией Docker к вам на компьютер автоматически будет установлен Docker Compose. Дальнейшие инструкции будут его активно использовать.
+Along with a recent version of Docker, `Docker Compose` will be installed automaticaly.
+All further instructions actively use Docker Compose. 
 
-## Как запустить сайт для локальной разработки
+----------
 
-Запустите базу данных и сайт:
+## Running the site locally
 
+Start the detabase and the web application
 ```shell
-$ docker compose up
+docker compose up
 ```
 
-В новом терминале, не выключая сайт, запустите несколько команд:
-
+In a new terminal, while the site is running, execute the following commands
 ```shell
-$ docker compose run --rm web ./manage.py migrate  # создаём/обновляем таблицы в БД
-$ docker compose run --rm web ./manage.py createsuperuser  # создаём в БД учётку суперпользователя
+docker compose run --rm web ./manage.py migrate  #create or update database tables
+docker compose run --rm web ./manage.py createsuperuser  #create a superuser account
 ```
 
-Готово. Сайт будет доступен по адресу [http://127.0.0.1:8080](http://127.0.0.1:8080). Вход в админку находится по адресу [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
+Done!
+The site will be available at: [http://127.0.0.1:8080](http://127.0.0.1:8080). 
 
-## Как вести разработку
+The django admin interface is available at: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
 
-Все файлы с кодом django смонтированы внутрь докер-контейнера, чтобы Nginx Unit сразу видел изменения в коде и не требовал постоянно пересборки докер-образа -- достаточно перезапустить сервисы Docker Compose.
+-----------
 
-### Как обновить приложение из основного репозитория
+## Development workflow
 
-Чтобы обновить приложение до последней версии подтяните код из центрального окружения и пересоберите докер-образы:
+All Django source files are mounted into the Docker container.
+This allows Nginx Unit to immediately pick up code changes without rebuilding the Docker image — restarting Docker Compose services is enough.
 
-``` shell
-$ git pull
-$ docker compose build
+### Updating the application from the main repository 
+To update the application to the latest version, pull the changes from the main repository and rebuild the Docker images
+```bash
+git pull
+docker compose build
 ```
 
-После обновлении кода из репозитория стоит также обновить и схему БД. Вместе с коммитом могли прилететь новые миграции схемы БД, и без них код не запустится.
+After updating the code in the repository, you should also update the databases schema.
+New commits may include database migrations, and without application them will not start.
 
-Чтобы не гадать заведётся код или нет — запускайте при каждом обновлении команду `migrate`. Если найдутся свежие миграции, то команда их применит:
-
+To avoid guessing whether migrations are required, run the `migrate` command after each update.
 ```shell
-$ docker compose run --rm web ./manage.py migrate
-…
+docker compose run --rm web ./manage.py migrate
+```
+Example output:
+```text
 Running migrations:
   No migrations to apply.
 ```
 
-### Как добавить библиотеку в зависимости
+### Adding a dependency
 
-В качестве менеджера пакетов для образа с Django используется pip с файлом requirements.txt. Для установки новой библиотеки достаточно прописать её в файл requirements.txt и запустить сборку докер-образа:
-
-```sh
-$ docker compose build web
-```
-
-Аналогичным образом можно удалять библиотеки из зависимостей.
-
-<a name="env-variables"></a>
-## Переменные окружения
-
-Образ с Django считывает настройки из переменных окружения:
-
-`SECRET_KEY` -- обязательная секретная настройка Django. Это соль для генерации хэшей. Значение может быть любым, важно лишь, чтобы оно никому не было известно. [Документация Django](https://docs.djangoproject.com/en/3.2/ref/settings/#secret-key).
-
-`DEBUG` -- настройка Django для включения отладочного режима. Принимает значения `TRUE` или `FALSE`. [Документация Django](https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-DEBUG).
-
-`ALLOWED_HOSTS` -- настройка Django со списком разрешённых адресов. Если запрос прилетит на другой адрес, то сайт ответит ошибкой 400. Можно перечислить несколько адресов через запятую, например `127.0.0.1,192.168.0.1,site.test`. [Документация Django](https://docs.djangoproject.com/en/3.2/ref/settings/#allowed-hosts).
-
-`DATABASE_URL` -- адрес для подключения к базе данных PostgreSQL. Другие СУБД сайт не поддерживает. [Формат записи](https://github.com/jacobian/dj-database-url#url-schema).
-
-
-## Развертывание в minikube
-1. Запуск кластера
-```sh
-minikube start
-kubectl config use-context minikube
-```
-2. Примените секрет (о нем читайте ниже в разделе `Kubernetes Secret`)
-
-3. PostgreSQL внутри кластера
-Установите PostgreSQL через Helm и задайте свои значения (логин/пароль/имя БД).
-```sh
-kubectl apply -f k8s/secret.yaml
-```
-После установки обновите секрет приложения с DATABASE_URL и перезапустите Django:
-```sh
-kubectl rollout restart deployment/django-deployment
-```
-5. Миграции
-```sh
-kubectl exec -it deploy/django-deployment -- python manage.py migrate --noinput
-kubectl exec -it deploy/django-deployment -- python manage.py createsuperuser
-```
-
-## Kubernetes Secret
-
-### 1) Как создать secret.yaml 
-Проект ожидает чувствительные настройки (например `DATABASE_URL`, `SECRET_KEY`) через Kubernetes Secret.
-
-1) Создайте локально файл k8s/secret.yaml, в нем будут лежать чувствительные данные.
-Пример k8s/secret.yaml:
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: django-secrets
-type: Opaque
-stringData:
-  DATABASE_URL: "postgres://USER:PASSWORD@HOST:5432/DBNAME" #Подставьте свои значения
-  SECRET_KEY: "change_me" #Подставьте свои значения
-  ALLOWED_HOSTS: "127.0.0.1,localhost" #Подставьте свои значения
-```
-2) Примените секрет:
-```sh
-kubectl apply -f k8s/secret.yaml
-```
-
-### Ingress (доступ к сайту по домену)
-
-Ingress нужен, чтобы открывать сайт по доменному имени и стандартному порту 80, без ip в адресе.  
-В этом проекте используется Ingress NGINX в Minikube.
-
-1) Включите Ingress в Minikube
+The Django image uses `pip` as the package manager with a `requirements.txt` file.
+To add a new dependency, simply add it to requirements.txt and rebuild the Docker image
 ```bash
-minikube addons enable ingress
-```
-2) Примените манифест Ingress
-```bash
-kubectl apply -f k8s/django-ingress.yaml
-```
-4) Пропишите домен в /etc/hosts/
-Ingress будет доступен по домену star-burger.test
-
-1. Узнать IP Minikube:
-```bash
-minikube ip
-```
-3. Откройте /etc/hosts/ и пропишите строку:
-```
-<MINIKUBE_IP> star-burger.test
+docker compose build web
 ```
 
-После этого сайт должен открываться [http://star-burger.test](http://star-burger.test)
+Dependencies can be removed in the same way.
 
-### Очистка устаревших сессий (clearsessions)
-Это нужно, чтобы база не разрасталась из-за старых сессий и сайт работал стабильнее.
-#### Запуск раз в месяц (CronJob)
-1. Примените манифест:
-```sh
-kubectl apply -f k8s/clearsession-cronjob.yaml
-```
-2. Проверить, что создано:
-```sh
-kubectl get cronjob
-```
-#### Запустить прямо сейчас (вручную из CronJob)
-1. Пропишите команду:
-```sh
-kubectl create job --from=cronjob/django-clearsessions django-clearsessions-once
-```
-2. Проверить, что создано:
-```sh
-kubectl get jobs
-```
+----------
+
+## Environment variables
+
+The Django image reads its configuration from environment variables
+`SECRET_KEY` — a required Django secret setting. This value is used as a salt for generating hashes. It can be any string, but it must remain private. [Django documentation](https://docs.djangoproject.com/en/3.2/ref/settings/#secret-key).
+
+`DEBUG` — enables or disables Django debug mode. Accepts `TRUE` or `FALSE`. [Django documentation](https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-DEBUG).
+
+`ALLOWED_HOSTS` — a Django setting that defines a list of allowed hostnames. Requests to any other host will result in a 400 error. Multiple hosts can be specified, separated by commas, for example: `127.0.0.1,192.168.0.1,site.test`. [Django documentation](https://docs.djangoproject.com/en/3.2/ref/settings/#allowed-hosts).
+
+`DATABASE_URL` — the connection string for the PostgreSQL database. Other databases engines are not supported. [Connection string format](https://github.com/jacobian/dj-database-url#url-schema).
+
+----------
+
+## Minikube (local Kubernetes)
+For local Kubernetes development and testing, this project can be run in Minikube.
+
+- Start Minikube and enable the NGINX Ingress addon.
+- Apply the Kubernetes manifests from the k8s/ directory.
+- Access the site via a local domain.
+
+See the full step-by-step guide here:
+[Kubernetes & Infrastructure Setup](deploy/yc-sirius-dev/README.md)
+
+
+## Kubernetes Deployment
+This project can be deployed to a Kubernetes cluster.
+
+The Kubernetes setup includes:
+- storing sensitive configuration in Kubernetes Secrets.
+- deploying the application using manifests.
+- exposing the service via Ingress in Minikube.
+
+Detailed instructions for Kubernetes deployment and configuration can be found here:
+[Kubernetes & Infrastructure Setup](deploy/yc-sirius-dev/README.md)
