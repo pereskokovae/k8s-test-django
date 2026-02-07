@@ -29,3 +29,16 @@ spec:
           env:
             - name: DEBUG
               value: "False"
+          volumeMounts:
+            - name: pgssl
+              mountPath: /certs
+              readOnly: true
+
+      volumes:
+        - name: pgssl
+          secret:
+            secretName: postgres-ssl
+            items:
+              - key: root.crt
+                path: root.crt
+
