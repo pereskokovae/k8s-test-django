@@ -89,8 +89,20 @@ docker login
 docker build -t <your-dockerhub-username>/<repo>:<git-sha> ./backend_main_django
 docker push <your-dockerhub-username>/<repo>:<git-sha>
 ```
----
 
+### 6. Run Django in Kubernetes
+The application is exposed via Nginx.
+
+To access the site locally:
+```bash
+kubectl port-forward -n edu-ekaterina-pereskokova svc/main-nginx 8080:80
+```
+
+Open in browser: [http://localhost:8080](http://localhost:8080)
+
+Django admin is available at: [http://localhost:8080/admin/](http://localhost:8080/admin/)
+
+---
 
 ## Local deployment in Minikube
 
